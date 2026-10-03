@@ -13,7 +13,7 @@ def test_health():
 
 
 def test_inference_ok():
-    
+
     payload = {"text":"I love this!"}
     resp = client.post("/inference", json=payload)
     assert resp.status_code == 200 
@@ -31,3 +31,7 @@ def test_inference_empty_text():
     resp = client.post("/inference", json=payload) 
     assert resp.status_code == 422
 
+def test_inference_empty_message():
+    response = client.post("/inference", json={})
+
+    assert response.status_code == 422
