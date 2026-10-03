@@ -1,10 +1,13 @@
+"""Caricamento e inferenza del modello"""
+
 from transformers import pipeline
 
 MODEL_NAME = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 
+
 class SentimentClassifier:
     def __init__(self) -> None:
-        # Carico il modello una volta sola all'avvio 
+        """Carico il modello una volta sola all'avvio"""
         self.pipe = pipeline(
             "sentiment-analysis",
             model=MODEL_NAME,
@@ -12,6 +15,7 @@ class SentimentClassifier:
         )
 
     def predict(self, text: str) -> dict:
+        """Restituisce label e confidenza dato un testo in input"""
         if not isinstance(text, str):
             raise TypeError("text deve essere una stringa")
 
@@ -20,11 +24,11 @@ class SentimentClassifier:
 
         result = self.pipe(text)[0]
 
-        # Restituiamo come result quello che ci ritorna il modello
         return {
             "text": text,
             "label": result["label"].lower(),
             "confidence": float(result["score"]),
         }
+
 
 classifier = SentimentClassifier()

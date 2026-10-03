@@ -1,12 +1,12 @@
+"""Esegue manualmente una richiesta di inferenza alle API in locale"""
+
 import requests
 
-url = "http://localhost:8000/inference"
+INFERENCE_URL = "http://localhost:8000/inference"
 
-data = {
-    "text": "I love this product"
-}
+data = {"text": "I love this product"}
 
-response = requests.post(url, json=data)
+response = requests.post(INFERENCE_URL, json=data)
 
 if response.status_code == 200:
     print("Risposta:", response.json())
