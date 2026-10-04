@@ -145,3 +145,23 @@ RUN pip install --no-cache-dir -r requirements-docker.txt \
     && pip install --no-cache-dir -r requirements-torch-cpu.txt
 ```
 
+### 7. Grafana
+
+Dopo aver configurato il file `monitoring/docker-compose.yml`, per farlo partire lanciare il comando:
+
+```bash
+docker compose -f 'monitoring/docker-compose.yml' up -d --build 
+```
+
+Nel `docker-compose.yml` ho dovuto mettere:
+
+```text
+network_mode: host
+```
+
+perchè l'installazione automatica di Infinity falliva perché la rete Docker Compose monitoring_default non riusciva a raggiungere grafana.com. Con 'network_mode: host' non bisogna usare il parametro ports, ma Grafana sarà disponibile direttamente sulla porta predefinita 3000:
+
+
+
+
+
