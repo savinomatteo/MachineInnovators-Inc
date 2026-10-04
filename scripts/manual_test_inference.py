@@ -6,7 +6,7 @@ INFERENCE_URL = "http://localhost:8000/inference"
 
 data = {"text": "I love this product"}
 
-response = requests.post(INFERENCE_URL, json=data)
+response = requests.post(INFERENCE_URL, json=data, timeout=10)
 
 if response.status_code == 200:
     print("Risposta:", response.json())

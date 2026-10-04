@@ -5,7 +5,9 @@ from transformers import pipeline
 MODEL_NAME = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 
 
-class SentimentClassifier:
+class SentimentClassifier:  # pylint: disable=too-few-public-methods
+    """Gestisce il caricamento e l'inferenza del modello"""
+
     def __init__(self) -> None:
         """Carico il modello una volta sola all'avvio"""
         self.pipe = pipeline(
