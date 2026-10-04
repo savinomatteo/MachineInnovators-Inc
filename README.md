@@ -67,3 +67,54 @@ Per controllare la qualità del codice:
 ```bash
 pylint app tests scripts
 ```
+
+### 6. Docker
+
+L'applicazione può essere eseguita in un container Docker.
+
+Il file `Dockerfile` definisce l'immagine dell'applicazione usando Python 3.14-slim.
+
+Il file `requirements-docker.txt` contiene le dipendenze minime necessarie
+all'esecuzione dell'API nel container:
+
+```text
+fastapi
+uvicorn[standard]
+transformers
+torch
+```
+
+Il file `requirements.txt` contiene invece le dipendenze dell'ambiente di
+sviluppo incluse quelle usate per test, linting e formatting.
+
+#### Build dell'immagine
+
+Dalla root del progetto, eseguire:
+
+```bash
+docker build -t sentiment-service .
+```
+
+Per visualizzare un output più dettagliato durante la build:
+
+```bash
+docker build --progress=plain -t sentiment-service .
+```
+
+#### Avvio del container
+
+Dopo la build, avviare il container:
+
+```bash
+docker run --rm -p 8000:8000 sentiment-service
+```
+
+L'opzione `--rm` elimina automaticamente il container quando viene fermato.
+
+#### Nota
+
+Il primo avvio del container può richiedere più tempo perché il modello e il 
+tokenizer vengono scaricati da Hugging Face
+
+Il container richiede spazio disco sufficiente per installare tutte le dipendenze,
+in particolare pytorch che occupa molto spazio
