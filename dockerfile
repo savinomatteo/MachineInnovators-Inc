@@ -3,8 +3,10 @@ FROM python:3.14-slim
 WORKDIR /app
 
 COPY requirements-docker.txt .
+COPY requirements-docker-torch-cpu.txt .
 
-RUN pip install --no-cache-dir -r requirements-docker.txt
+RUN pip install --no-cache-dir -r requirements-docker.txt \
+    && pip install --no-cache-dir -r requirements-docker-torch-cpu.txt
 
 COPY app ./app
 

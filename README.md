@@ -111,10 +111,37 @@ docker run --rm -p 8000:8000 sentiment-service
 
 L'opzione `--rm` elimina automaticamente il container quando viene fermato.
 
-#### Nota
+#### PyTorch CPU-only
 
-Il primo avvio del container può richiedere più tempo perché il modello e il 
-tokenizer vengono scaricati da Hugging Face
+Il modello Hugging Face viene eseguito localmente tramite la libreria `transformers`. Anche se il codice dell'applicazione non importa direttamente `torch`, PyTorch è necessario come backend per caricare ed eseguire il modello.
 
-Il container richiede spazio disco sufficiente per installare tutte le dipendenze,
-in particolare pytorch che occupa molto spazio
+la versione di PyTorch è stata definita in un file separato:
+
+```text
+requirements-torch-cpu.txt
+```
+
+Contenuto:
+
+```text
+--index-url [https://download.pytorch.org/whl/cpu](https://download.pytorch.org/whl/cpu)
+torch
+```
+
+In modo da poter specificare di scaricare la versione CPU-only.
+
+Questa separazione evita che vengano installate dipendenze di Pytorch non necessarie per questo servizio. Ho dovuto farlo perchè altrimenti CodeSpace nonostante avessi creato la versione con più risorse andava in difficoltà quando provavo a fare docker build.
+
+```text
+fastapi
+uvicorn[standard]
+transformers
+```
+
+Nel Dockerfile le dipendenze vengono installate in due passaggi:
+
+```dockerfile
+RUN pip install --no-cache-dir -r requirements-docker.txt \
+    && pip install --no-cache-dir -r requirements-torch-cpu.txt
+```
+
