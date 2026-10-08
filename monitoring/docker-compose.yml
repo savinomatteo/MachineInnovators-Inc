@@ -1,4 +1,14 @@
 services:
+  api:
+    build: ..
+    container_name: machine-innovators-inc-api
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - MONITORING_SNAPSHOT_INTERVAL_S=30
+    volumes:
+      - ../data:/app/data
+      - hf-cache:/root/.cache/huggingface   # Cache del modello Hugging Face, evita di riscaricarlo a ogni avvio
   grafana:
     image: grafana/grafana-enterprise:12.2.5
     container_name: grafana
@@ -7,9 +17,15 @@ services:
     # ports:
     #   - "3000:3000"
     environment:
-      - GF_PLUGINS_PREINSTALL=yesoreyeram-infinity-datasource
+      - GF_PLUGINS_PREINSTALL=yesoreyeram-infinity-datasource@3.11.1
     volumes:
       - grafana-storage:/var/lib/grafana
+      # Datasource, dashboard e alert caricati da file all'avvio
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      - api
 
 volumes:
   grafana-storage: {}
+  hf-cache: {}

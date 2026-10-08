@@ -118,13 +118,13 @@ Il modello Hugging Face viene eseguito localmente tramite la libreria `transform
 la versione di PyTorch è stata definita in un file separato:
 
 ```text
-requirements-torch-cpu.txt
+requirements-docker-torch-cpu.txt
 ```
 
 Contenuto:
 
 ```text
---index-url [https://download.pytorch.org/whl/cpu](https://download.pytorch.org/whl/cpu)
+--index-url https://download.pytorch.org/whl/cpu
 torch
 ```
 
@@ -132,26 +132,47 @@ In modo da poter specificare di scaricare la versione CPU-only.
 
 Questa separazione evita che vengano installate dipendenze di Pytorch non necessarie per questo servizio. Ho dovuto farlo perchè altrimenti CodeSpace nonostante avessi creato la versione con più risorse andava in difficoltà quando provavo a fare docker build.
 
-```text
-fastapi
-uvicorn[standard]
-transformers
-```
-
 Nel Dockerfile le dipendenze vengono installate in due passaggi:
 
 ```dockerfile
 RUN pip install --no-cache-dir -r requirements-docker.txt \
-    && pip install --no-cache-dir -r requirements-torch-cpu.txt
+    && pip install --no-cache-dir -r requirements-docker-torch-cpu.txt
 ```
 
-### 7. Grafana
+### 7. Monitoraggio con Grafana
 
-Dopo aver configurato il file `monitoring/docker-compose.yml`, per farlo partire lanciare il comando:
+#### Raccolta delle metriche
+
+Le metriche vengono raccolte dall'API stessa in `app/monitoring.py`:
+
+- il middleware FastAPI registra ogni richiesta con status code e tempo di risposta
+- l'endpoint `/inference` registra la classe predetta, la confidenza e la lunghezza del testo
+
+Le chiamate a `/health` e agli endpoint `/monitoring/*` non vengono conteggiate, altrimenti le interrogazioni di Grafana falserebbero volume e latenza.
+
+Ogni 30 secondi un task in background dell'app salva nello storico `data/monitoring_history.json` uno snapshot con le metriche dell'ultimo intervallo, poi azzera i contatori dell'intervallo. All'inizio salvavo i totali cumulativi dall'avvio, ma l'aumentare dei numeri farebbe perdere traccia dei picchi.
+
+Ogni snapshot contiene:
+- `requests`: richieste ricevute nell'intervallo 
+- `client_errors`, `client_error_rate` : risposte 4xx (input non validi, dipendono da ciò che manda il client) 
+- `server_errors`, `error_rate`: risposte 5xx (errori del servizio) 
+- `avg_latency_ms`, `max_latency_ms`: tempo di risposta medio e massimo in ms
+- `predictions`: predizioni andate a buon fine 
+- `positive_*`, `neutral_*`, `negative_*`: numero e rate di predizioni per classe 
+- `avg_text_length` | lunghezza media dei testi in caratteri 
+- `avg_confidence` | confidenza media del modello 
+- `timestamp`, `window_seconds` | fine e durata dell'intervallo (UTC) 
+
+
+#### Avvio dello stack con Grafana
+
+Per avviare API e Grafana:
 
 ```bash
-docker compose -f 'monitoring/docker-compose.yml' up -d --build 
+docker compose -f 'monitoring/docker-compose.yml' up -d --build
 ```
+
+Grafana è disponibile su `http://localhost:3000` (utente e password di default `admin` / `admin`).
 
 Nel `docker-compose.yml` ho dovuto mettere:
 
@@ -159,9 +180,50 @@ Nel `docker-compose.yml` ho dovuto mettere:
 network_mode: host
 ```
 
-perchè l'installazione automatica di Infinity falliva perché la rete Docker Compose monitoring_default non riusciva a raggiungere grafana.com. Con 'network_mode: host' non bisogna usare il parametro ports, ma Grafana sarà disponibile direttamente sulla porta predefinita 3000:
+perchè l'installazione automatica di Infinity falliva perché la rete Docker Compose monitoring_default non riusciva a raggiungere grafana.com. Con 'network_mode: host' non bisogna usare il parametro ports, ma Grafana sarà disponibile direttamente sulla porta predefinita 3000. Se dopo aver fatto `compose-up` non è stata aggiunta nella liste delle porte la porta 3000, basta fara `Aggiungi porta` e mettere la 3000 e il servizio di Grafana sarà disponibile.
+
+Datasource, dashboard e alert non vanno configurati a mano: Grafana li carica all'avvio dai file che sono in `monitoring/grafana/`.
+
+In questo modo chi riceve il progetto trova la dashboard già pronta e le modifiche alla dashboard passano dalla repository. Per modificarla: la si cambia dall'interfaccia di Grafana, si esporta il JSON (Export > Export as JSON) e lo si sostituisce in `sentiment-api.json`.
+
+Prima di andare su Grafana, quando le api sono avviate la prima cosa che sarebbe meglio fare è avviare lo script per la generazione dei dati di test che permetterà di avere dei dati per dashboar e alert.
+
+#### Dashboard
+
+La dashboard `MachineInnovators-Inc` contiene:
+
+- richieste, error rate, latenza media e negative rate dall'avvio del servizio;
+- distribuzione delle classi predette e negative rate, con la soglia dell'alert;
+- lunghezza media dei testi e confidenza media del modello, utili per accorgersi di un data drift.
+
+#### Alert
+
+Sono configurati due alert:
+
+- `Negative rate elevata`: predizioni negative > 50% delle predizioni degli ultimi 30 minuti, serve per accorgersi in tempo quando il sentiment cambia
+- `Latenza media elevata`: latenza media degli ultimi 5 minuti > 1 s
 
 
+#### Generazione dati di test
 
+Per avere dati da visualizzare nella dashboard ho creato lo script:
 
+```bash
+scripts/generate_monitoring_data.py
+```
 
+Lo script invia richieste di esempio all'API (con dei testi di esempio trovati per il modello) a intervalli casuali fino a quando l'utente non esce con ctrl + C
+
+Per eseguirlo:
+
+```bash
+python scripts/generate_monitoring_data.py
+```
+
+Con l'opzione `--scenario negative` la maggior parte dei messaggi inviati diventa negativa: serve a simulare un cambio di sentiment nei tweet e verificare che l'alert sul negative rate si attivi
+
+```bash
+python scripts/generate_monitoring_data.py --scenario negative
+```
+
+Si possono modificare anche gli intervalli tra una richiesta e l'altra con `--min-wait` e `--max-wait` (in secondi)

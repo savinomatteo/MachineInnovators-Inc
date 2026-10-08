@@ -1,0 +1,264 @@
+# Regole di alert caricate da Grafana all'avvio.
+# Create da interfaccia ed esportate con la funzione 'Export rules'
+
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: Alert notifications
+      folder: MachineInnovators-Inc
+      interval: 1m
+      rules:
+        - uid: bg0iotwzeyvwga
+          title: Numero di commenti negativi elevato
+          condition: condition
+          data:
+            - refId: negativi
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: machine-innovators-inc-api
+              model:
+                columns:
+                    - selector: timestamp
+                      text: timestamp
+                      type: timestamp
+                    - selector: negative_predictions
+                      text: Negative Predictions
+                      type: number
+                computed_columns:
+                    - selector: ""
+                      text: ""
+                      type: string
+                filters: []
+                format: table
+                global_query_id: ""
+                intervalMs: 1000
+                maxDataPoints: 43200
+                parser: backend
+                refId: negativi
+                root_selector: ""
+                source: url
+                type: json
+                url: http://localhost:8000/monitoring/history?minutes=30
+                url_options:
+                    data: ""
+                    method: GET
+            - refId: totale
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: machine-innovators-inc-api
+              model:
+                columns:
+                    - selector: timestamp
+                      text: timestamp
+                      type: timestamp
+                    - selector: predictions
+                      text: Predictions
+                      type: number
+                datasource:
+                    type: yesoreyeram-infinity-datasource
+                    uid: machine-innovators-inc-api
+                filters: []
+                format: table
+                global_query_id: ""
+                hide: false
+                intervalMs: 1000
+                maxDataPoints: 43200
+                parser: backend
+                refId: totale
+                root_selector: ""
+                source: url
+                type: json
+                url: http://localhost:8000/monitoring/history?minutes=30
+                url_options:
+                    data: ""
+                    method: GET
+            - refId: condition
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: avg
+                      type: query
+                datasource:
+                    name: Expression
+                    type: __expr__
+                    uid: __expr__
+                expression: $somma_totale >= 30 && ($somma_negativi / $somma_totale) > 0.5
+                hide: false
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: condition
+                type: math
+            - refId: somma_negativi
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: avg
+                      type: query
+                datasource:
+                    name: Expression
+                    type: __expr__
+                    uid: __expr__
+                expression: negativi
+                hide: false
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: sum
+                refId: somma_negativi
+                settings:
+                    mode: dropNN
+                type: reduce
+            - refId: somma_totale
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: avg
+                      type: query
+                datasource:
+                    name: Expression
+                    type: __expr__
+                    uid: __expr__
+                expression: totale
+                hide: false
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: sum
+                refId: somma_totale
+                settings:
+                    mode: dropNN
+                type: reduce
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          isPaused: false
+          notification_settings:
+            receiver: grafana-default-email
+        - uid: cg0iplti1z8qob
+          title: Latenza media elevata
+          condition: condition
+          data:
+            - refId: latenza
+              relativeTimeRange:
+                from: 300
+                to: 0
+              datasourceUid: machine-innovators-inc-api
+              model:
+                columns:
+                    - selector: timestamp
+                      text: timestamp
+                      type: timestamp
+                    - selector: avg_latency_ms
+                      text: Latenza
+                      type: number
+                filters: []
+                format: table
+                global_query_id: ""
+                intervalMs: 1000
+                maxDataPoints: 43200
+                parser: backend
+                refId: latenza
+                root_selector: ""
+                source: url
+                type: json
+                url: http://localhost:8000/monitoring/history?minutes=5
+                url_options:
+                    data: ""
+                    method: GET
+            - refId: media_latenza
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: latenza
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: mean
+                refId: media_latenza
+                settings:
+                    mode: dropNN
+                type: reduce
+            - refId: condition
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: avg
+                      type: query
+                datasource:
+                    name: Expression
+                    type: __expr__
+                    uid: __expr__
+                expression: $media_latenza > 1000
+                hide: false
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: condition
+                type: math
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            summary: La latenza media degli ultimi 5 minuti supera 1 secondo
+          labels:
+            severity: warning
+          isPaused: false
+          notification_settings:
+            receiver: grafana-default-email
