@@ -17,7 +17,6 @@ from .monitoring import (
 )
 
 
-
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """Avvia il salvataggio periodico degli snapshot insieme all'app"""

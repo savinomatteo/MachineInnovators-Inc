@@ -81,7 +81,7 @@ def record_text(text):
 
 
 def _ratio(numerator, denominator, digits=4):
-    """Divisione che restituisce None se il denominatore e' 0. 
+    """Divisione che restituisce None se il denominatore e' 0.
     Fatto per fare in modo che Grafana mostri un buco
     invece di uno 0 che sembrerebbe un valore reale"""
     return round(numerator / denominator, digits) if denominator else None
