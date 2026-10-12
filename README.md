@@ -227,3 +227,46 @@ python scripts/generate_monitoring_data.py --scenario negative
 ```
 
 Si possono modificare anche gli intervalli tra una richiesta e l'altra con `--min-wait` e `--max-wait` (in secondi)
+
+### 8. Airflow
+
+E' stato aggiunto Airflow utilizzando la configurazione ufficiale fornita dal progetto.
+
+### Installazione e configurazione
+
+Dalla cartella del progetto, scaricare il file `docker-compose.yaml` della versione 2.5.0:
+
+```bash
+curl -LfO '[https://airflow.apache.org/docs/apache-airflow/2.5.0/docker-compose.yaml](https://airflow.apache.org/docs/apache-airflow/2.5.0/docker-compose.yaml)'
+```
+
+E' necessario creare le cartelle utilizzate da Airflow per i DAG, i log e i plugin, e generare il file `.env` contenente l’UID dell’utente corrente, possiamo farlo con questi due comandi:
+
+```bash
+mkdir -p ./dags ./logs ./plugins
+echo -e "AIRFLOW_UID=$(id -u)" > .env
+```
+
+E' stato aggiunto il .gitignore nella cartella airflow/logs per evitare che il log finiscano nel repository
+
+### Inizializzazione
+
+Prima di avviare Airflow, eseguire il servizio di inizializzazione:
+
+```bash
+docker compose up airflow-init
+```
+
+### Avvio
+
+Dopo l’inizializzazione, avviare Airflow con:
+
+```bash
+docker compose up
+```
+
+L’interfaccia web è disponibile all’indirizzo:
+
+```text
+http://localhost:8080
+```
