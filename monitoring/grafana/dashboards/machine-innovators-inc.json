@@ -91,7 +91,7 @@
           "root_selector": "",
           "source": "url",
           "type": "json",
-          "url": "http://localhost:8000/monitoring/summary",
+          "url": "http://mlops-api:8000/monitoring/summary",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -172,7 +172,7 @@
           "root_selector": "",
           "source": "url",
           "type": "json",
-          "url": "http://localhost:8000/monitoring/summary",
+          "url": "http://mlops-api:8000/monitoring/summary",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -252,7 +252,7 @@
           "root_selector": "",
           "source": "url",
           "type": "json",
-          "url": "http://localhost:8000/monitoring/summary",
+          "url": "http://mlops-api:8000/monitoring/summary",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -333,7 +333,7 @@
           "root_selector": "",
           "source": "url",
           "type": "json",
-          "url": "http://localhost:8000/monitoring/summary",
+          "url": "http://mlops-api:8000/monitoring/summary",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -509,7 +509,7 @@
           "root_selector": "",
           "source": "url",
           "type": "json",
-          "url": "\thttp://localhost:8000/monitoring/history",
+          "url": "\thttp://mlops-api:8000/monitoring/history",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -643,7 +643,7 @@
           "root_selector": "",
           "source": "url",
           "type": "json",
-          "url": "http://localhost:8000/monitoring/history",
+          "url": "http://mlops-api:8000/monitoring/history",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -776,7 +776,7 @@
           "root_selector": "",
           "source": "url",
           "type": "json",
-          "url": "\thttp://localhost:8000/monitoring/history",
+          "url": "\thttp://mlops-api:8000/monitoring/history",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -905,7 +905,7 @@
           "root_selector": "",
           "source": "url",
           "type": "json",
-          "url": "http://localhost:8000/monitoring/history",
+          "url": "http://mlops-api:8000/monitoring/history",
           "url_options": {
             "data": "",
             "method": "GET"

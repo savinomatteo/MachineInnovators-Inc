@@ -1,0 +1,23 @@
+services:
+  api:
+    build: .
+    container_name: machine-innovators-inc-api
+    restart: unless-stopped
+    #network_mode: host
+    ports:
+      - "8000:8000"
+    networks:
+      mlops-network:
+        aliases:
+          - mlops-api
+    environment:
+      - MONITORING_SNAPSHOT_INTERVAL_S=30
+    volumes:
+      - ./data:/app/data
+
+volumes:
+  hf-cache: {}
+  
+networks:
+  mlops-network:
+    external: true

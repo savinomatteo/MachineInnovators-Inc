@@ -9,4 +9,4 @@ datasources:
     editable: false
     jsonData:
       allowedHosts:
-        - http://localhost:8000
+        - http://mlops-api:8000

@@ -3,9 +3,11 @@ services:
     image: grafana/grafana-enterprise:12.2.5
     container_name: grafana
     restart: unless-stopped
-    network_mode: host
-    # ports:
-    #   - "3000:3000"
+    #network_mode: host
+    ports:
+      - "3000:3000"
+    networks:
+      - mlops-network
     environment:
       - GF_PLUGINS_PREINSTALL=yesoreyeram-infinity-datasource@3.11.1
     volumes:
@@ -13,8 +15,10 @@ services:
       # Datasource, dashboard e alert caricati da file all'avvio
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/etc/grafana/dashboards:ro
-    depends_on:
-      - api
 
 volumes:
   grafana-storage: {}
+
+networks:
+  mlops-network:
+    external: true

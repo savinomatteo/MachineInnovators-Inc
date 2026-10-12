@@ -4,6 +4,56 @@
 
 ## Avvio del progetto
 
+Per avviare il progetto la sequenza di comandi da seguire è questa:
+
+Creazione di una rete da far condividere ai container:
+
+```bash
+docker network create mlops-network
+```
+
+Avvio delle API (girano sulla porta 8000):
+
+```bash
+docker compose -f docker-compose.yml up -d
+```
+
+
+Avvio di Grafana (gira sulla porta 3000):
+
+```bash
+docker compose -f monitoring/docker-compose.yml up -d
+```
+
+Inizializzazione e avvio di Airflow (gira sulla porta 8080):
+
+```bash
+docker compose -f airflow/docker-compose.yaml up airflow-init
+docker compose -f airflow/docker-compose.yaml up -d
+```
+
+Per poter avere dei dati a disposizione di Grafana, sarà necessario avviare uno script che una volta avviato manderà richieste alle API fino a quando non viene stoppato, è documentato nella sezione **Generazione dati di test**. Per avviarlo bisogna:
+
+Creare un ambiente virtuale e attivare l'ambiente virtuale:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+installare la libreria di python 'request':
+```bash
+python -m pip install requests
+```
+
+lanciare lo script:
+```bash
+python scripts\generate_monitoring_data.py
+```
+
+lo script continuerà ad inviare dati fino a quando l'utente non premerà ctrl + C per bloccarne l'esecuzione.
+
+
 ### 1. Creazione e attivazione del virtual environment
 
 Creare l'ambiente virtuale:
@@ -72,7 +122,7 @@ pylint app tests scripts
 
 L'applicazione può essere eseguita in un container Docker.
 
-Il file `Dockerfile` definisce l'immagine dell'applicazione usando Python 3.14-slim.
+Il file `Dockerfile` definisce l'immagine dell'applicazione usando Python 3.11-slim.
 
 Il file `requirements-docker.txt` contiene le dipendenze minime necessarie
 all'esecuzione dell'API nel container:
@@ -174,13 +224,7 @@ docker compose -f 'monitoring/docker-compose.yml' up -d --build
 
 Grafana è disponibile su `http://localhost:3000` (utente e password di default `admin` / `admin`).
 
-Nel `docker-compose.yml` ho dovuto mettere:
-
-```text
-network_mode: host
-```
-
-perchè l'installazione automatica di Infinity falliva perché la rete Docker Compose monitoring_default non riusciva a raggiungere grafana.com. Con 'network_mode: host' non bisogna usare il parametro ports, ma Grafana sarà disponibile direttamente sulla porta predefinita 3000. Se dopo aver fatto `compose-up` non è stata aggiunta nella liste delle porte la porta 3000, basta fara `Aggiungi porta` e mettere la 3000 e il servizio di Grafana sarà disponibile.
+Se dopo aver fatto `compose-up` non è stata aggiunta nella liste delle porte la porta 3000, basta fara `Aggiungi porta` e mettere la 3000 e il servizio di Grafana sarà disponibile.
 
 Datasource, dashboard e alert non vanno configurati a mano: Grafana li carica all'avvio dai file che sono in `monitoring/grafana/`.
 
@@ -270,3 +314,6 @@ L’interfaccia web è disponibile all’indirizzo:
 ```text
 http://localhost:8080
 ```
+
+
+

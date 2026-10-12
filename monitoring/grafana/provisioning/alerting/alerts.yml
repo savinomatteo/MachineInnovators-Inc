@@ -39,7 +39,7 @@ groups:
                 root_selector: ""
                 source: url
                 type: json
-                url: http://localhost:8000/monitoring/history?minutes=30
+                url: http://mlops-api:8000/monitoring/history?minutes=30
                 url_options:
                     data: ""
                     method: GET
@@ -70,7 +70,7 @@ groups:
                 root_selector: ""
                 source: url
                 type: json
-                url: http://localhost:8000/monitoring/history?minutes=30
+                url: http://mlops-api:8000/monitoring/history?minutes=30
                 url_options:
                     data: ""
                     method: GET
@@ -194,7 +194,7 @@ groups:
                 root_selector: ""
                 source: url
                 type: json
-                url: http://localhost:8000/monitoring/history?minutes=5
+                url: http://mlops-api:8000/monitoring/history?minutes=5
                 url_options:
                     data: ""
                     method: GET
