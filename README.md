@@ -53,6 +53,18 @@ python scripts\generate_monitoring_data.py
 
 lo script continuerà ad inviare dati fino a quando l'utente non premerà ctrl + C per bloccarne l'esecuzione.
 
+
+### Nota Importate
+
+La parte finale, quella relativa ad Airflow è stata sviluppata facendo girare in locale il codice, perchè cancellavo i Code Space di github pensando di fare una cosa utile e fargli risparmiare risorse, fino a quando non mi è venuto fuori questo messaggio:
+
+```text
+Create notice
+You are out of monthly free usage or have exceeded your budget for Codespaces. Increase your budget to continue using Codespaces.
+```
+
+Quindi essendo che mi sono capitati problemi di risorse inizialmente con pytorch, ma successivamente anche con i primi tentativi con Airflow non sono certo che riesca a girare su un Code Space
+
 ## Strumenti utilizzati
 
 ### 1. Creazione e attivazione del virtual environment
