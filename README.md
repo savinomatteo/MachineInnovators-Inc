@@ -53,6 +53,7 @@ python scripts\generate_monitoring_data.py
 
 lo script continuerà ad inviare dati fino a quando l'utente non premerà ctrl + C per bloccarne l'esecuzione.
 
+## Strumenti utilizzati
 
 ### 1. Creazione e attivazione del virtual environment
 
@@ -276,7 +277,7 @@ Si possono modificare anche gli intervalli tra una richiesta e l'altra con `--mi
 
 E' stato aggiunto Airflow utilizzando la configurazione ufficiale fornita dal progetto.
 
-### Installazione e configurazione
+#### Installazione e configurazione
 
 Dalla cartella del progetto, scaricare il file `docker-compose.yaml` della versione 2.5.0:
 
@@ -293,7 +294,7 @@ echo -e "AIRFLOW_UID=$(id -u)" > .env
 
 E' stato aggiunto il .gitignore nella cartella airflow/logs per evitare che il log finiscano nel repository
 
-### Inizializzazione
+#### Inizializzazione
 
 Prima di avviare Airflow, eseguire il servizio di inizializzazione:
 
@@ -301,7 +302,7 @@ Prima di avviare Airflow, eseguire il servizio di inizializzazione:
 docker compose up airflow-init
 ```
 
-### Avvio
+#### Avvio
 
 Dopo l’inizializzazione, avviare Airflow con:
 
@@ -316,4 +317,73 @@ http://localhost:8080
 ```
 
 
+
+### 9. Data drift e concept drift
+
+Il monitoraggio non serve solo per controllare che l'API funzioni, ma anche per capire se il modello resta affidabile nel tempo. In paritcolare possono verificarsi due problemi diversi:
+- **Data drift**: cambiano i testi che arrivano al modello, ma il modo in cui un testo esprime un sentiment rimane simile.   
+  Per esempio, i commenti possono diventare più lunghi, contenere più hashtag, più slang oppure essere scritti in una lingua diversa da quella vista durante l'addestramento del modello.
+- **Concept drift**: cambia la relazione tra testo e sentiment.  
+  Per esempio, una frase o un modo di scrivere che prima veniva percepito come neutro può ad un certo punto diventare in realtà negativo
+
+#### Segnali da monitorare
+
+I principali segnali a cui prestare attenzione sono:
+- **Aumento della lunghezza media dei testi**: può indicare un data drift, perché arrivano testi diversi da quelli abituali
+- **Calo della confidenza media**: può indicare che il modello riceve testi meno simili a quelli visti in addestramento
+- **Cambio improvviso nella distribuzione positive / neutral / negative**: può indicare un concept drift oppure un cambiamento reale nell'opinione del pubblico
+- **Aumento della negative rate**: può indicare un deterioramento della reputazione, ma anche un possibile drift
+- **Calo di accuracy o macro-F1 sul dataset etichettato**: indica che il modello non sta più generalizzando bene sui dati recenti
+- **Aumento di testi vuoti, molto corti o fuori dominio**: può indicare un problema di qualità o copertura dei dati in ingresso
+
+L'API raccoglie già alcune metriche utili per notare questi cambiamenti:
+
+- lunghezza media dei testi in ingresso
+- confidenza media del modello
+- distribuzione delle predizioni positive, neutral e negative
+- negative rate
+
+Questi dati sono visibili nella dashboard Grafana e permettono di notare rapidamente un comportamento anomalo.
+
+Però un aumento della negative rate **non dimostra da solo** che sia avvenuto un drift. Può anche significare che, in quel periodo, gli utenti stanno davvero esprimendo più opinioni negative, ad esempio dopo una notizia negativa sull'azienda.
+
+Per confermare un sospetto di drift serve una valutazione su dati recenti etichettati. Questo è il compito del dag Airflow `evaluate_model_retraining` che carica il dataset con testi e label reali, chiama l'API, calcola accuracy e macro-F1 e salva un report. Se la qualità scende sotto la soglia configurata, il DAG segnala la necessità di un retraining.
+
+In un progetto reale questo ciclo dovrebbe esssere schedulato ripetetuto periodicamente: si raccolgono nuovi dati, si etichetta un campione, si valuta il modello e così facendo si può decidere se è necessario addestrarlo nuovamente.
+
+
+### 10. Deploy su Hugging Face
+
+Il deploy su Hugging Face non è stato implementato perché, durante la creazione dello Space con il mio account personale le opzioni Docker e Gradio richiedevano un piano a pagamento.
+Per questo progetto avrei usato Docker, perché l'applicazione è un'API FastAPI ed è già containerizzata.
+Dato che il deploy su Hugging Face è facoltativo nella consegna, ho scelto di non sottoscrivere un abbonamento e di documentare come potrebbe essere configurato.
+
+#### Struttura dello space
+
+Sarebbe necessario creare uno Space scegliendo Docker come SDK e caricare solo i file necessari per eseguire l'API:
+- la cartella app
+- i due file di requiremnts: `requirements-docker.txt` e `requirements-docker-torch-cpu.txt`
+- il file docker `Dockerfile`
+
+In modo che il deploy nello Space avrebbe riguardato solo il servizio delle API
+
+#### Configurazione
+
+Sarebbe corretto adattare il Dockerfile per avviare FastAPI sulla porta `7860`, essendo quella la  porta predefinita di Hugging Face Docker Spaces (anche se non è obbligatoria), e quindi poi addattare di conseguenza il Dockerfile:
+
+```dockerfile
+EXPOSE 7860
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+```
+
+Dopo aver caricato i file nel repository dello space, Hugging Face costrusce l'immagine ed esegue il container
+
+Eventuali token andrebbero configurati come Secret nelle impostazioni dello Space, evitando di inserirli nel codice o nel Dockerfile
+
+#### Verifica del servizio
+Una volta avviato lo Space, tramite l'indirizzo pubblico fornito da Hugging Face sarebbe possibile verificare:
+
+- `/health`: per controllare che il servizio rispondesse.
+- `/inference`: per inviare un testo e controllare la risposta del modello.
 
